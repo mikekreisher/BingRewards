@@ -10,8 +10,6 @@ topics.shuffle!
 
 print "Found 30 Search Topics\n"
 
-Selenium::WebDriver::Firefox::Binary.path="C:\\Documents and Settings\\kreisherm\\Local Settings\\Application Data\\Mozilla Firefox\\firefox.exe"
-
 print "Starting Browser\n"
 b = Watir::Browser.new
 b.goto 'bing.com'
@@ -41,3 +39,5 @@ topics.each_with_index do |topic, i|
   b.text_field(:id=>"sb_form_q").when_present.set(topic)
   b.input(:type=>'submit', :id=>'sb_form_go').click
 end
+
+b.close
