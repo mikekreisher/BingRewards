@@ -85,7 +85,7 @@ topics.each_with_index do |topic, i|
   print "#{(i+1).to_s.rjust(2)}. Searching for #{topic}\n"
   b.text_field(:id=>"sb_form_q").when_present.set(topic)
   b.input(:type=>'submit', :id=>'sb_form_go').click
-  b.driver.manage.timeouts.implicit_wait = 5 # Wait 5 seconds
+  sleep 5 # Wait 5 seconds
 end
 
 b.close
