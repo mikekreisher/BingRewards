@@ -9,23 +9,25 @@ password       = ""
 browser_path   = ""
 approve_topics = false
 
-config_file = File.open("settings.conf", "r")
-config_file.each do |line|
-  split_line = line.chomp.split('=')
-  unless split_line[1].nil?
-    case split_line[0]
-    when "[browser_path]"
-      browser_path = split_line[1]
-    when "[username]"
-      username = split_line[1]
-    when "[password]"
-      password = split_line[1]
-    when "[approve_topics]"
-      approve_topics = split_line[1]
+if ARGV.count == 1 && File.exists?(ARGV[0])
+  config_file = File.open(ARGV[0], "r")
+  config_file.each do |line|
+    split_line = line.chomp.split('=')
+    unless split_line[1].nil?
+      case split_line[0]
+      when "[browser_path]"
+        browser_path = split_line[1]
+      when "[username]"
+        username = split_line[1]
+      when "[password]"
+        password = split_line[1]
+      when "[approve_topics]"
+        approve_topics = split_line[1]
+      end
     end
   end
+  config_file.close
 end
-config_file.close
 
 topics_doc = Nokogiri::HTML(open('http://soovle.com/top'))
 topics     = topics_doc.search('div.letter .correction span').to_a.sample(30).collect{|x| x.content}
@@ -41,7 +43,7 @@ if approve_topics
     end
     print "=============\n=============\n"
     puts "Do you approve these topics? (y|n):"
-    if gets.chomp.downcase == "y"
+    if STDIN.gets.chomp.downcase == "y"
       topics_approved = true
     else
       topics = topics_doc.search('div.letter .correction span').to_a.sample(30).collect{|x| x.content}
@@ -66,7 +68,7 @@ begin
 
   if username == ""
     puts "Username: "
-    username = gets.chomp
+    username = STDIN.gets.chomp
   end
   login.set username
 
