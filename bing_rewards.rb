@@ -28,7 +28,7 @@ if ARGV.count == 1 && File.exists?(ARGV[0])
   end
   config_file.close
 end
-=begin
+
 topics_doc = Nokogiri::HTML(open('http://soovle.com/top'))
 topics     = topics_doc.search('div.letter .correction span').to_a.sample(30).collect{|x| x.content}
 topics.shuffle!
@@ -51,7 +51,7 @@ if approve_topics
     end
   end
 end
-=end
+
 unless browser_path == ""
    Selenium::WebDriver::Firefox::Binary.path = browser_path
 end
@@ -82,7 +82,7 @@ begin
   sign_in_button.click
   b.alert.when_present.ok
 end while(login.exists? && pass.exists? && sign_in_button.exists?)
-=begin
+
 topics.each_with_index do |topic, i|
   print "#{(i+1).to_s.rjust(2)}. Searching for #{topic}\n"
   b.text_field(:id=>"sb_form_q").when_present.set(topic)
@@ -90,7 +90,7 @@ topics.each_with_index do |topic, i|
   sleep 5 # Wait 5 seconds
 end
 print "\n==================\nSEARCHES COMPLETED\n==================\n"
-=end
+
 print "\n=========\nTODO LIST\n=========\n"
 b.goto 'http://www.bing.com/rewards/dashboard'
 
