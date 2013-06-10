@@ -28,7 +28,7 @@ if ARGV.count == 1 && File.exists?(ARGV[0])
   end
   config_file.close
 end
-
+=begin
 topics_doc = Nokogiri::HTML(open('http://soovle.com/top'))
 topics     = topics_doc.search('div.letter .correction span').to_a.sample(30).collect{|x| x.content}
 topics.shuffle!
@@ -51,7 +51,7 @@ if approve_topics
     end
   end
 end
-
+=end
 unless browser_path == ""
    Selenium::WebDriver::Firefox::Binary.path = browser_path
 end
@@ -82,14 +82,39 @@ begin
   sign_in_button.click
   b.alert.when_present.ok
 end while(login.exists? && pass.exists? && sign_in_button.exists?)
-
+=begin
 topics.each_with_index do |topic, i|
   print "#{(i+1).to_s.rjust(2)}. Searching for #{topic}\n"
   b.text_field(:id=>"sb_form_q").when_present.set(topic)
   b.input(:type=>'submit', :id=>'sb_form_go').click
   sleep 5 # Wait 5 seconds
 end
+print "\n==================\nSEARCHES COMPLETED\n==================\n"
+=end
+print "\n=========\nTODO LIST\n=========\n"
+b.goto 'http://www.bing.com/rewards/dashboard'
+
+todo_list = b.div(:id=>'todo_tiles').ul(:class=>'row')
+todo_list.lis.each do |li|
+  not_completed = li.div(:class=>'open-check')
+  if not_completed.exists?
+    print "- #{li.link.text}\n"
+    li.link.click
+    b.windows.last.use
+    b.windows.last.close
+    b.windows.last.use
+  end
+end
+
+b.refresh
+
+print "\n======\nSTATUS\n======\n"
+balance = b.div(:class=>"user-balance")
+print "#{balance.text}\n"
+
+print "\n============\nCURRENT GOAL\n============\n"
+goal_title = b.div(:class=>"user-goal-title").link
+progress = b.div(:class=>"user-goal-progress")
+print "#{goal_title.text}\n#{progress.text}\n"
 
 b.close
-
-print "\n==================\nSEARCHES COMPLETED\n==================\n"
