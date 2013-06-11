@@ -94,16 +94,21 @@ print "\n==================\nSEARCHES COMPLETED\n==================\n"
 print "\n=========\nTODO LIST\n=========\n"
 b.goto 'http://www.bing.com/rewards/dashboard'
 
+todo_ids = []
 todo_list = b.div(:id=>'todo_tiles').ul(:class=>'row')
 todo_list.lis.each do |li|
   not_completed = li.div(:class=>'open-check')
   if not_completed.exists?
-    print "- #{li.link.text}\n"
-    li.link.click
-    b.windows.last.use
-    b.windows.last.close
-    b.windows.last.use
+    todo_ids << li.link.id
   end
+end
+todo_ids.each do |id|
+  link_to_click = b.div(:id=>'todo_tiles').ul(:class=>'row').link(:id=>id)
+  print "- #{link_to_click.text}\n"
+  link_to_click.click
+  b.windows.last.use
+  b.windows.last.close
+  b.windows.last.use
 end
 
 b.refresh
