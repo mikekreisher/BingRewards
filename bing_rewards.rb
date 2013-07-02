@@ -8,6 +8,7 @@ username       = ""
 password       = ""
 browser_path   = ""
 approve_topics = false
+search_count   = 30
 
 if ARGV.count == 1 && File.exists?(ARGV[0])
   config_file = File.open(ARGV[0], "r")
@@ -23,6 +24,8 @@ if ARGV.count == 1 && File.exists?(ARGV[0])
         password = split_line[1]
       when "[approve_topics]"
         approve_topics = split_line[1]
+      when "[search_count]"
+        search_count = split_line[1].to_i
       end
     end
   end
@@ -30,9 +33,9 @@ if ARGV.count == 1 && File.exists?(ARGV[0])
 end
 
 topics_doc = Nokogiri::HTML(open('http://soovle.com/top'))
-topics     = topics_doc.search('div.letter .correction span').to_a.sample(30).collect{|x| x.content}
+topics     = topics_doc.search('div.letter .correction span').to_a.sample(search_count).collect{|x| x.content}
 topics.shuffle!
-print "Found 30 Search Topics\n"
+print "Found #{search_count} Search Topics\n"
 
 if approve_topics
   topics_approved = false
@@ -46,7 +49,7 @@ if approve_topics
     if STDIN.gets.chomp.downcase == "y"
       topics_approved = true
     else
-      topics = topics_doc.search('div.letter .correction span').to_a.sample(30).collect{|x| x.content}
+      topics = topics_doc.search('div.letter .correction span').to_a.sample(search_count).collect{|x| x.content}
       topics.shuffle!
     end
   end
