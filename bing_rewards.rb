@@ -73,7 +73,7 @@ begin
     puts "Username: "
     username = STDIN.gets.chomp
   end
-  login.set username
+  login.when_present.set username
 
   if password == ""
     puts "Password: "
