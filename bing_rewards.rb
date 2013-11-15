@@ -9,6 +9,7 @@ password       = ""
 browser_path   = ""
 approve_topics = false
 search_count   = 30
+errors 		   = false
 
 if ARGV.count == 1 && File.exists?(ARGV[0])
   config_file = File.open(ARGV[0], "r")
@@ -97,32 +98,52 @@ print "\n==================\nSEARCHES COMPLETED\n==================\n"
 print "\n=========\nTODO LIST\n=========\n"
 b.goto 'http://www.bing.com/rewards/dashboard'
 
-todo_ids = []
-todo_list = b.div(:id=>'todo_tiles').ul(:class=>'row')
-todo_list.lis.each do |li|
-  not_completed = li.div(:class=>'open-check')
-  if not_completed.exists?
-    todo_ids << li.link.id
-  end
-end
-todo_ids.each do |id|
-  link_to_click = b.div(:id=>'todo_tiles').ul(:class=>'row').link(:id=>id)
-  print "- #{link_to_click.text}\n"
-  link_to_click.click
-  b.windows.last.use
-  b.windows.last.close
-  b.windows.last.use
+begin
+	todo_ids = []
+	todo_list = b.div(:class=>'tileset').ul(:class=>'row')
+	todo_list.lis.each do |li|
+		not_completed = li.div(:class=>'open-check')
+		if not_completed.exists?
+			todo_ids << li.link.id
+		end
+	end
+	todo_ids.each do |id|
+		link_to_click = b.div(:class=>'tileset').ul(:class=>'row').link(:id=>id)
+		print "- #{link_to_click.text}\n"
+		link_to_click.click
+		b.windows.last.use
+		b.windows.last.close
+		b.windows.last.use
+	end
+rescue Exception => e
+	print "\n*****\nERROR\n*****\n"
+	print "There was an error processing the todo list:\n#{e.message}\n"
+	errors = true
 end
 
 b.refresh
 
-print "\n======\nSTATUS\n======\n"
-balance = b.div(:class=>"user-balance")
-print "#{balance.text}\n"
+begin
+	print "\n======\nSTATUS\n======\n"
+	balance = b.div(:class=>"user-balance")
+	print "#{balance.text}\n"
+rescue Exception => e
+	print "\n*****\nERROR\n*****\n"
+	print "There was an error accessing the balance:\n#{e.message}\n"
+	errors = true
+end
 
-print "\n============\nCURRENT GOAL\n============\n"
-goal_title = b.div(:class=>"user-goal-title").link
-progress = b.div(:class=>"user-goal-progress")
-print "#{goal_title.text}\n#{progress.text}\n"
+begin
+	print "\n============\nCURRENT GOAL\n============\n"
+	goal_title = b.div(:class=>"user-goal-title").link
+	progress = b.div(:class=>"user-goal-progress")
+	print "#{goal_title.text}\n#{progress.text}\n"
+rescue Exception => e
+	print "\n*****\nERROR\n*****\n"
+	print "Could not find Current Goal:\n#{e.message}\n"
+	errors = true
+end
 
 b.close
+
+print "* Errors present in run. See log above\n" if errors
