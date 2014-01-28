@@ -132,15 +132,17 @@ b.goto 'http://www.bing.com/rewards/dashboard'
 
 begin
 	todo_ids = []
-	todo_list = b.div(:class=>'tileset').ul(:class=>'row')
-	todo_list.lis.each do |li|
-		not_completed = li.div(:class=>'open-check')
-		if not_completed.exists?
-			todo_ids << li.link.id
+	b.divs(:class=>'tileset').each do |offer_div|
+		todo_list = offer_div.ul(:class=>'row')
+		todo_list.lis.each do |li|
+			not_completed = li.div(:class=>'open-check')
+			if not_completed.exists?
+				todo_ids << li.link.id
+			end
 		end
 	end
 	todo_ids.each do |id|
-		link_to_click = b.div(:class=>'tileset').ul(:class=>'row').link(:id=>id)
+		link_to_click = b.link(:id=>id)
 		print "- #{link_to_click.text}\n"
     if link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn"
       progress_tile = link_to_click.div(:class=>'progress')
@@ -166,8 +168,9 @@ b.refresh
 
 begin
 	print "\n======\nSTATUS\n======\n"
-	balance = b.div(:class=>"user-balance")
-	print "#{balance.text}\n"
+	#balance = b.div(:class=>"user-balance")
+	balance = b.div(:id => "user-status", :class => "side-tile").div(:class => "credits-left").div(:class => "credits")
+	print "#{balance.text} Credits Available\n"
 rescue Exception => e
 	print "\n*****\nERROR\n*****\n"
 	print "There was an error accessing the balance:\n#{e.message}\n"
@@ -176,9 +179,10 @@ end
 
 begin
 	print "\n============\nCURRENT GOAL\n============\n"
-	goal_title = b.div(:class=>"user-goal-title").link
-	progress = b.div(:class=>"user-goal-progress")
-	print "#{goal_title.text}\n#{progress.text}\n"
+	goal_title = b.link(:class=>"user-goal-title")
+	progress = b.div(:class=>"progress-credits")
+	percentage = b.div(:class=>"progress-percentage")
+	print "#{goal_title.text}\n#{progress.text.sub(' Remove goal', '')} #{percentage.text}\n"
 rescue Exception => e
 	print "\n*****\nERROR\n*****\n"
 	print "Could not find Current Goal:\n#{e.message}\n"
