@@ -1,16 +1,17 @@
-require "watir-webdriver"
-require "watir-webdriver/extensions/alerts"
 require "io/console"
-require "nokogiri"
 require "open-uri"
+require "bundler/setup"
 
-username       = ""
-password       = ""
-browser_path   = ""
-approve_topics = false
-search_count   = 30
-errors 		   = false
+Bundler.require
+
+$username       = ""
+$password       = ""
+$approve_topics = false
+$errors 	    = false
+$browser_path   = ""
+search_count    = 30
 searches_per_credit = 3
+mobile_searches_per_credit = 2
 
 if ARGV.count == 1 && File.exists?(ARGV[0])
   config_file = File.open(ARGV[0], "r")
@@ -19,13 +20,13 @@ if ARGV.count == 1 && File.exists?(ARGV[0])
     unless split_line[1].nil?
       case split_line[0]
       when "[browser_path]"
-        browser_path = split_line[1]
+        $browser_path = split_line[1]
       when "[username]"
-        username = split_line[1]
+        $username = split_line[1]
       when "[password]"
-        password = split_line[1]
+        $password = split_line[1]
       when "[approve_topics]"
-        approve_topics = split_line[1]
+        $approve_topics = split_line[1]
       when "[search_count]"
         search_count = split_line[1].to_i
       when "[searches_per_credit]"
@@ -36,7 +37,7 @@ if ARGV.count == 1 && File.exists?(ARGV[0])
   config_file.close
 end
 
-def search(credits, searches_per_credit, approve_topics, browser)
+def search(credits, searches_per_credit, browser)
   begin
     print "Gathering Searches...\n"
     search_count = credits * searches_per_credit
@@ -49,7 +50,7 @@ def search(credits, searches_per_credit, approve_topics, browser)
   end
   
 
-  if approve_topics
+  if $approve_topics
     topics_approved = false
     while !topics_approved
       print "=============\nSEARCH TOPICS\n=============\n"
@@ -79,7 +80,7 @@ def search(credits, searches_per_credit, approve_topics, browser)
     print "\n*****\nERROR\n*****\n"
     print "There was an error performing the searches:\n#{e.message}\n"
     raise Watir::Exception::WatirException, "Could not find form"
-    errors = true
+    $errors = true
   rescue Watir::Exception::TimeoutException => e
     print "\n*****\nERROR\n*****\n"
     print "There was an error performing the searches:\n#{e.message}\n"
@@ -88,13 +89,88 @@ def search(credits, searches_per_credit, approve_topics, browser)
 
 end
 
-
-
-
-
-unless browser_path == ""
-   Selenium::WebDriver::Firefox::Binary.path = browser_path
+def todo_list(browser, searches_per_credit)
+  begin
+  	todo_ids = []
+  	browser.divs(:class=>'tileset').each do |offer_div|
+  		todo_list = offer_div.ul(:class=>'row')
+  		todo_list.lis.each do |li|
+  			not_completed = li.div(:class=>'open-check')
+  			if not_completed.exists?
+  				todo_ids << li.link.id
+  			end
+  		end
+  	end
+  	todo_ids.each do |id|
+  		link_to_click = browser.link(:id=>id)
+  		print "- #{link_to_click.text}\n"
+      if link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn"
+        progress_tile = link_to_click.div(:class=>'progress')
+        progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
+        link_to_click.click
+        browser.windows.last.use
+        search(progress[2].to_i - progress[1].to_i, searches_per_credit, $approve_topics, browser)
+        browser.windows.last.close
+      else
+        link_to_click.click
+        browser.windows.last.use
+        browser.windows.last.close
+      end
+  		browser.windows.last.use
+  	end
+  rescue Exception => e
+  	print "\n*****\nERROR\n*****\n"
+  	print "There was an error processing the todo list:\n#{e.message}\n"
+  	$errors = true
+  end
 end
+
+def login(browser)
+  begin
+    login = browser.text_field :type => 'email', :name => 'login'
+    pass = browser.text_field :type => 'password', :name => 'passwd'
+    sign_in_button = browser.input :type => 'submit'  
+  
+    if $username == ""
+      puts "Username: "
+      $username = STDIN.gets.chomp
+    end
+    login.when_present.set $username
+  
+    if $password == ""
+      puts "Password: "
+      $password = STDIN.noecho {|i| i.gets}.chomp
+    end
+    pass.set $password
+  
+    sign_in_button.click
+    browser.alert.when_present.ok
+  end while(login.exists? && pass.exists? && sign_in_button.exists?)
+  print "Logged in as #{$username}\n"
+end
+
+
+
+
+unless $browser_path == ""
+   Selenium::WebDriver::Firefox::Binary.path = $browser_path
+end
+
+
+print "\n====================\nSTARTING BING MOBILE\n====================\n"
+print "Starting Browser\n"
+driver = Webdriver::UserAgent.driver(:agent => :iphone, :orientation => :landscape)
+b = Watir::Browser.new driver
+b.goto 'bing.com/rewards/signin'
+b.span(:text=>"Connect with Microsoft account").when_present.click
+
+login(b)
+todo_list(b, mobile_searches_per_credit)
+
+print "\n===============\nMOBILE COMPLETE\n===============\n"
+b.close
+
+print "\n=====================\nSTARTING BING DESKTOP\n=====================\n"
 print "Starting Browser\n"
 b = Watir::Browser.new
 b.goto 'bing.com'
@@ -102,79 +178,22 @@ b.span(:text=>"Sign in").when_present.click
 b.link(:href, /login\.live/).when_present.click
 
 print "Logging In\n"
-begin
-  login          = b.text_field :type => 'email', :name => 'login'
-  pass           = b.text_field :type => 'password', :name => 'passwd'
-  sign_in_button = b.input :type => 'submit'
-
-  if username == ""
-    puts "Username: "
-    username = STDIN.gets.chomp
-  end
-  login.when_present.set username
-
-  if password == ""
-    puts "Password: "
-    password = STDIN.noecho {|i| i.gets}.chomp
-  end
-  pass.set password
-  password = ""
-
-  sign_in_button.click
-  b.alert.when_present.ok
-end while(login.exists? && pass.exists? && sign_in_button.exists?)
-print "Logged in as #{username}\n"
-
-
+login(b)
 
 print "\n=========\nTODO LIST\n=========\n"
 b.goto 'http://www.bing.com/rewards/dashboard'
-
-begin
-	todo_ids = []
-	b.divs(:class=>'tileset').each do |offer_div|
-		todo_list = offer_div.ul(:class=>'row')
-		todo_list.lis.each do |li|
-			not_completed = li.div(:class=>'open-check')
-			if not_completed.exists?
-				todo_ids << li.link.id
-			end
-		end
-	end
-	todo_ids.each do |id|
-		link_to_click = b.link(:id=>id)
-		print "- #{link_to_click.text}\n"
-    if link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn"
-      progress_tile = link_to_click.div(:class=>'progress')
-      progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
-      link_to_click.click
-      b.windows.last.use
-      search(progress[2].to_i - progress[1].to_i, searches_per_credit, approve_topics, b)
-      b.windows.last.close
-    else
-      link_to_click.click
-      b.windows.last.use
-      b.windows.last.close
-    end
-		b.windows.last.use
-	end
-rescue Exception => e
-	print "\n*****\nERROR\n*****\n"
-	print "There was an error processing the todo list:\n#{e.message}\n"
-	errors = true
-end
+todo_list(b, searches_per_credit)
 
 b.refresh
 
 begin
 	print "\n======\nSTATUS\n======\n"
-	#balance = b.div(:class=>"user-balance")
 	balance = b.div(:id => "user-status", :class => "side-tile").div(:class => "credits-left").div(:class => "credits")
 	print "#{balance.text} Credits Available\n"
 rescue Exception => e
 	print "\n*****\nERROR\n*****\n"
 	print "There was an error accessing the balance:\n#{e.message}\n"
-	errors = true
+	$errors = true
 end
 
 begin
@@ -186,9 +205,9 @@ begin
 rescue Exception => e
 	print "\n*****\nERROR\n*****\n"
 	print "Could not find Current Goal:\n#{e.message}\n"
-	errors = true
+	$errors = true
 end
 
 b.close
 
-print "* Errors present in run. See log above\n" if errors
+print "* Errors present in run. See log above\n" if $errors

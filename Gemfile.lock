@@ -1,0 +1,33 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    childprocess (0.5.1)
+      ffi (~> 1.0, >= 1.0.11)
+    facets (2.9.3)
+    ffi (1.9.3)
+    json (1.8.1)
+    mini_portile (0.5.2)
+    multi_json (1.9.2)
+    nokogiri (1.6.1)
+      mini_portile (~> 0.5.0)
+    rubyzip (1.1.2)
+    selenium-webdriver (2.40.0)
+      childprocess (>= 0.5.0)
+      multi_json (~> 1.0)
+      rubyzip (~> 1.0)
+      websocket (~> 1.0.4)
+    watir-webdriver (0.6.8)
+      selenium-webdriver (>= 2.18.0)
+    webdriver-user-agent (7.1)
+      facets
+      json
+      selenium-webdriver
+    websocket (1.0.7)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  nokogiri
+  watir-webdriver
+  webdriver-user-agent
