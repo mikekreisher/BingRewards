@@ -109,7 +109,7 @@ def todo_list(browser, searches_per_credit)
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
         link_to_click.click
         browser.windows.last.use
-        search(progress[2].to_i - progress[1].to_i, searches_per_credit, $approve_topics, browser)
+        search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
         browser.windows.last.close
       else
         link_to_click.click
