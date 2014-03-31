@@ -162,7 +162,8 @@ print "Starting Browser\n"
 driver = Webdriver::UserAgent.driver(:agent => :iphone, :orientation => :landscape)
 b = Watir::Browser.new driver
 b.goto 'bing.com/rewards/signin'
-b.span(:text=>"Connect with Microsoft account").when_present.click
+#b.span(:text=>"Sign in with your Microsoft account").when_present.click
+b.link(:id => "WLSignin").when_present.click 
 
 login(b)
 todo_list(b, mobile_searches_per_credit)
