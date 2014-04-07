@@ -71,6 +71,7 @@ def search(credits, searches_per_credit, browser)
   begin
     topics.each_with_index do |topic, i|
       print "#{(i+1).to_s.rjust(2)}. Searching for #{topic}\n"
+      browser.alert.when_present.ok if browser.alert.exists?
       browser.text_field(:id=>"sb_form_q").when_present.set(topic)
       browser.form(:id=>"sb_form").submit
       sleep 5 # Wait 5 seconds
@@ -144,8 +145,8 @@ def login(browser)
     pass.set $password
   
     sign_in_button.click
-    browser.alert.when_present.ok
-  end while(login.exists? && pass.exists? && sign_in_button.exists?)
+    browser.alert.when_present.ok if browser.alert.exists?
+  end #while(login.exists? && pass.exists? && sign_in_button.exists?)
   print "Logged in as #{$username}\n"
 end
 
@@ -161,11 +162,13 @@ print "\n====================\nSTARTING BING MOBILE\n====================\n"
 print "Starting Browser\n"
 driver = Webdriver::UserAgent.driver(:agent => :iphone, :orientation => :landscape)
 b = Watir::Browser.new driver
-b.goto 'bing.com/rewards/signin'
+#b.goto 'bing.com/rewards/signin'
 #b.span(:text=>"Sign in with your Microsoft account").when_present.click
-b.link(:id => "WLSignin").when_present.click 
+b.goto 'login.live.com'
+#b.link(:id => "WLSignin").when_present.click 
 
 login(b)
+b.goto 'http://www.bing.com/rewards/dashboard'
 todo_list(b, mobile_searches_per_credit)
 
 print "\n===============\nMOBILE COMPLETE\n===============\n"
@@ -174,9 +177,10 @@ b.close
 print "\n=====================\nSTARTING BING DESKTOP\n=====================\n"
 print "Starting Browser\n"
 b = Watir::Browser.new
-b.goto 'bing.com'
-b.span(:text=>"Sign in").when_present.click
-b.link(:href, /login\.live/).when_present.click
+#b.goto 'bing.com'
+#b.span(:text=>"Sign in").when_present.click
+#b.link(:href, /login\.live/).when_present.click
+b.goto 'login.live.com'
 
 print "Logging In\n"
 login(b)
