@@ -114,6 +114,7 @@ def todo_list(browser, searches_per_credit)
         browser.windows.last.close
       else
         link_to_click.click
+		browser.alert.when_present.ok if browser.alert.exists?
         browser.windows.last.use
         browser.windows.last.close
       end
