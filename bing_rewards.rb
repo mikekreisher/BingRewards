@@ -8,6 +8,7 @@ $username       = ""
 $password       = ""
 $approve_topics = false
 $errors 	    = false
+$mobile_errors  = false
 $browser_path   = ""
 search_count    = 30
 searches_per_credit = 3
@@ -102,6 +103,7 @@ def todo_list(browser, searches_per_credit)
   			end
   		end
   	end
+	
   	todo_ids.each do |id|
   		link_to_click = browser.link(:id=>id)
   		print "- #{link_to_click.text}\n"
@@ -111,12 +113,12 @@ def todo_list(browser, searches_per_credit)
         link_to_click.click
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
-        browser.windows.last.close
+        browser.windows.last.close if browser.windows.length > 1
       else
         link_to_click.click
 		browser.alert.when_present.ok if browser.alert.exists?
         browser.windows.last.use
-        browser.windows.last.close
+        browser.windows.last.close if browser.windows.length > 1
       end
   		browser.windows.last.use
   	end
@@ -171,6 +173,24 @@ b.goto 'login.live.com'
 login(b)
 b.goto 'http://www.bing.com/rewards/dashboard'
 todo_list(b, mobile_searches_per_credit)
+b.goto 'http://www.bing.com/rewards/dashboard'
+
+begin
+	print "\n======\nSTATUS\n======\n"
+	user_level = b.div(:id => "user-status").div(:class => "level-label")
+	print "#{user_level.text.capitalize} Level\n" 
+	balance = b.div(:id => "user-status").div(:class => "data-available").div(:class => "data-value-text")
+	print "#{balance.text} Credits Available\n"
+	lifetime = b.div(:id => "user-status").div(:class => "data-lifetime").div(:class => "data-value-text")
+	print "#{lifetime.text} Lifetime Credits\n"
+rescue Exception => e
+	print "\n*****\nERROR\n*****\n"
+	print "There was an error accessing the balances:\n#{e.message}\n"
+	$errors = true
+end
+
+$mobile_errors = true if $errors
+$errors = false
 
 print "\n===============\nMOBILE COMPLETE\n===============\n"
 b.close
@@ -194,11 +214,15 @@ b.refresh
 
 begin
 	print "\n======\nSTATUS\n======\n"
+	user_level =  b.div(:id => "user-status", :class => "side-tile").div(:class => "level-right").link(:class => "level-label")
+	print "#{user_level.text.capitalize} Level\n"
 	balance = b.div(:id => "user-status", :class => "side-tile").div(:class => "credits-left").div(:class => "credits")
 	print "#{balance.text} Credits Available\n"
+	lifetime = b.div(:id => "user-status", :class => "side-tile").div(:class => "credits-right").div(:class => "credits")
+	print "#{lifetime.text} Lifetime Credits\n"
 rescue Exception => e
 	print "\n*****\nERROR\n*****\n"
-	print "There was an error accessing the balance:\n#{e.message}\n"
+	print "There was an error accessing the balances:\n#{e.message}\n"
 	$errors = true
 end
 
@@ -216,4 +240,7 @@ end
 
 b.close
 
-print "* Errors present in run. See log above\n" if $errors
+print "\n"
+print "MOBILE SUCCESSFUL\n" unless $mobile_errors
+print "DESKTOP SUCCESSFUL\n" unless $errors
+print "* Errors present in run. See log above\n" if $errors || $mobile_errors
