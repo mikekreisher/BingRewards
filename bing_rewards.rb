@@ -121,6 +121,7 @@ def todo_list(browser, searches_per_credit)
         browser.windows.last.close if browser.windows.length > 1
       end
   		browser.windows.last.use
+		browser.goto 'http://www.bing.com/rewards/dashboard'
   	end
   rescue Exception => e
   	print "\n*****\nERROR\n*****\n"
