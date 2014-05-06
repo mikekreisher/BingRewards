@@ -10,6 +10,7 @@ $approve_topics = false
 $errors 	    = false
 $mobile_errors  = false
 $browser_path   = ""
+$mobile         = false
 search_count    = 30
 searches_per_credit = 3
 mobile_searches_per_credit = 2
@@ -70,6 +71,12 @@ def search(credits, searches_per_credit, browser)
   end
 
   begin
+	start_link = browser.a(:href => '/search?q=weather&bnprt=searchandearn')
+	if start_link.exists?
+		start_link.click
+	else
+		browser.goto 'http://www.bing.com/search?q=weather&bnprt=searchandearn'
+	end
     topics.each_with_index do |topic, i|
       print "#{(i+1).to_s.rjust(2)}. Searching for #{topic}\n"
       browser.alert.when_present.ok if browser.alert.exists?
@@ -108,6 +115,20 @@ def todo_list(browser, searches_per_credit)
   		link_to_click = browser.link(:id=>id)
   		print "- #{link_to_click.text}\n"
       if link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn"
+        progress_tile = link_to_click.div(:class=>'progress')
+        progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
+        link_to_click.click
+        browser.windows.last.use
+        search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
+        browser.windows.last.close if browser.windows.length > 1
+	  elsif id == 'mobsrch01' && $mobile
+        progress_tile = link_to_click.div(:class=>'progress')
+        progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
+        link_to_click.click
+        browser.windows.last.use
+        search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
+        browser.windows.last.close if browser.windows.length > 1
+	  elsif id == 'srchdbl002' && !$mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
         link_to_click.click
@@ -166,6 +187,7 @@ print "\n====================\nSTARTING BING MOBILE\n====================\n"
 print "Starting Browser\n"
 driver = Webdriver::UserAgent.driver(:agent => :iphone, :orientation => :landscape)
 b = Watir::Browser.new driver
+$mobile = true
 #b.goto 'bing.com/rewards/signin'
 #b.span(:text=>"Sign in with your Microsoft account").when_present.click
 b.goto 'login.live.com'
@@ -199,6 +221,7 @@ b.close
 print "\n=====================\nSTARTING BING DESKTOP\n=====================\n"
 print "Starting Browser\n"
 b = Watir::Browser.new
+$mobile = false
 #b.goto 'bing.com'
 #b.span(:text=>"Sign in").when_present.click
 #b.link(:href, /login\.live/).when_present.click
