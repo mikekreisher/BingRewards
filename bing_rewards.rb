@@ -121,14 +121,14 @@ def todo_list(browser, searches_per_credit)
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
         browser.windows.last.close if browser.windows.length > 1
-	  elsif id == 'mobsrch01' && $mobile
+	  elsif (id == 'mobsrch01' || link_to_click.href =~ /.*\/explore\/rewards-mobile.*/) && $mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
         link_to_click.click
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
         browser.windows.last.close if browser.windows.length > 1
-	  elsif id == 'srchdbl002' && !$mobile
+	  elsif (id == 'srchdbl002' || link_to_click.href =~ /.*\/explore\/rewards-searchearn.*/) && !$mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
         link_to_click.click
