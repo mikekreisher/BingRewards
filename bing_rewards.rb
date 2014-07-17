@@ -238,11 +238,11 @@ b.refresh
 
 begin
 	print "\n======\nSTATUS\n======\n"
-	user_level =  b.div(:id => "user-status", :class => "side-tile").div(:class => "level-right").link(:class => "level-label")
+	user_level =  b.div(:id => "user-status", :class => "side-tile").element(:class => "level-right").link(:class => "level-label")
 	print "#{user_level.text.capitalize} Level\n"
-	balance = b.div(:id => "user-status", :class => "side-tile").div(:class => "credits-left").div(:class => "credits")
+	balance = b.div(:id => "user-status", :class => "side-tile").element(:class => "credits-left").div(:class => "credits")
 	print "#{balance.text} Credits Available\n"
-	lifetime = b.div(:id => "user-status", :class => "side-tile").div(:class => "credits-right").div(:class => "credits")
+	lifetime = b.div(:id => "user-status", :class => "side-tile").element(:class => "credits-right").div(:class => "credits")
 	print "#{lifetime.text} Lifetime Credits\n"
 rescue Exception => e
 	print "\n*****\nERROR\n*****\n"
