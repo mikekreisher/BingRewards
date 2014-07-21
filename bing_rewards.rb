@@ -50,7 +50,7 @@ def search(credits, searches_per_credit, browser)
   rescue OpenURI::HTTPError => e
     raise IOError, "Unable to find search topics"
   end
-  
+
 
   if $approve_topics
     topics_approved = false
@@ -110,7 +110,7 @@ def todo_list(browser, searches_per_credit)
   			end
   		end
   	end
-	
+
   	todo_ids.each do |id|
   		link_to_click = browser.link(:id=>id)
   		print "- #{link_to_click.text}\n"
@@ -155,20 +155,20 @@ def login(browser)
   begin
     login = browser.text_field :type => 'email', :name => 'login'
     pass = browser.text_field :type => 'password', :name => 'passwd'
-    sign_in_button = browser.input :type => 'submit'  
-  
+    sign_in_button = browser.input :type => 'submit'
+
     if $username == ""
       puts "Username: "
       $username = STDIN.gets.chomp
     end
     login.when_present.set $username
-  
+
     if $password == ""
       puts "Password: "
       $password = STDIN.noecho {|i| i.gets}.chomp
     end
     pass.set $password
-  
+
     sign_in_button.click
     browser.alert.when_present.ok if browser.alert.exists?
   end #while(login.exists? && pass.exists? && sign_in_button.exists?)
@@ -191,7 +191,7 @@ $mobile = true
 #b.goto 'bing.com/rewards/signin'
 #b.span(:text=>"Sign in with your Microsoft account").when_present.click
 b.goto 'login.live.com'
-#b.link(:id => "WLSignin").when_present.click 
+#b.link(:id => "WLSignin").when_present.click
 
 login(b)
 b.goto 'http://www.bing.com/rewards/dashboard'
@@ -201,7 +201,7 @@ b.goto 'http://www.bing.com/rewards/dashboard'
 begin
 	print "\n======\nSTATUS\n======\n"
 	user_level = b.div(:id => "user-status").div(:class => "level-label")
-	print "#{user_level.text.capitalize} Level\n" 
+	print "#{user_level.text.capitalize} Level\n"
 	balance = b.div(:id => "user-status").div(:class => "data-available").div(:class => "data-value-text")
 	print "#{balance.text} Credits Available\n"
 	lifetime = b.div(:id => "user-status").div(:class => "data-lifetime").div(:class => "data-value-text")
@@ -267,4 +267,5 @@ b.close
 print "\n"
 print "MOBILE SUCCESSFUL\n" unless $mobile_errors
 print "DESKTOP SUCCESSFUL\n" unless $errors
+print "\nRUN COMPLETE AT #{Time.now}\n\n"
 print "* Errors present in run. See log above\n" if $errors || $mobile_errors
