@@ -114,7 +114,7 @@ def todo_list(browser, searches_per_credit)
   	todo_ids.each do |id|
   		link_to_click = browser.link(:id=>id)
   		print "- #{link_to_click.text}\n"
-      if link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn"
+      if (link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn" || link_to_click.href =~ /.*\/search\?q.*/)
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
         link_to_click.click
