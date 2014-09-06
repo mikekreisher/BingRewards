@@ -113,8 +113,10 @@ def todo_list(browser, searches_per_credit)
 
   	todo_ids.each do |id|
   		link_to_click = browser.link(:id=>id)
-  		print "- #{link_to_click.text}\n"
-      if (link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn" || link_to_click.href =~ /.*\/search\?q.*/)
+  		print "- #{link_to_click.element(:class=>"message").text}\n"
+      if ((link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn" || 
+              link_to_click.href =~ /.*\/search\?q.*/ ||
+              link_to_click.href =~ /.*\/news\?q.*/) && !$mobile)
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
         link_to_click.click
@@ -137,7 +139,7 @@ def todo_list(browser, searches_per_credit)
         browser.windows.last.close if browser.windows.length > 1
       else
         link_to_click.click
-		browser.alert.when_present.ok if browser.alert.exists?
+		    browser.alert.when_present.ok if browser.alert.exists?
         browser.windows.last.use
         browser.windows.last.close if browser.windows.length > 1
       end
@@ -200,12 +202,8 @@ b.goto 'http://www.bing.com/rewards/dashboard'
 
 begin
 	print "\n======\nSTATUS\n======\n"
-	user_level = b.div(:id => "user-status").div(:class => "level-label")
-	print "#{user_level.text.capitalize} Level\n"
-	balance = b.div(:id => "user-status").div(:class => "data-available").div(:class => "data-value-text")
+	balance = b.span(:id => "id_rc")
 	print "#{balance.text} Credits Available\n"
-	lifetime = b.div(:id => "user-status").div(:class => "data-lifetime").div(:class => "data-value-text")
-	print "#{lifetime.text} Lifetime Credits\n"
 rescue Exception => e
 	print "\n*****\nERROR\n*****\n"
 	print "There was an error accessing the balances:\n#{e.message}\n"
@@ -222,9 +220,6 @@ print "\n=====================\nSTARTING BING DESKTOP\n=====================\n"
 print "Starting Browser\n"
 b = Watir::Browser.new
 $mobile = false
-#b.goto 'bing.com'
-#b.span(:text=>"Sign in").when_present.click
-#b.link(:href, /login\.live/).when_present.click
 b.goto 'login.live.com'
 
 print "Logging In\n"
@@ -261,7 +256,7 @@ rescue Exception => e
 	print "Could not find Current Goal:\n#{e.message}\n"
 	$errors = true
 end
-
+  
 b.close
 
 print "\n"
