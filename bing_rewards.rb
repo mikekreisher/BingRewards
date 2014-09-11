@@ -114,7 +114,7 @@ def todo_list(browser, searches_per_credit)
   	todo_ids.each do |id|
   		link_to_click = browser.link(:id=>id)
   		print "- #{link_to_click.element(:class=>"message").text}\n"
-      if ((link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn" || 
+      if ((link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn" ||
               link_to_click.href =~ /.*\/search\?q.*/ ||
               link_to_click.href =~ /.*\/news\?q.*/) && !$mobile)
         progress_tile = link_to_click.div(:class=>'progress')
@@ -126,7 +126,7 @@ def todo_list(browser, searches_per_credit)
 	  elsif (id == 'mobsrch01' || link_to_click.href =~ /.*\/explore\/rewards-mobile.*/) && $mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
-        link_to_click.click
+        link_to_click.element(:class=>"message").click
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
         browser.windows.last.close if browser.windows.length > 1
@@ -148,7 +148,12 @@ def todo_list(browser, searches_per_credit)
   	end
   rescue Exception => e
   	print "\n*****\nERROR\n*****\n"
-  	print "There was an error processing the todo list:\n#{e.message}\n"
+    stack_trace = e.backtrace.map{|x|
+      x.match(/^(.+?):(\d+)(|:in `(.+)')$/)
+      [$1,$2,$4]
+    }
+  	print "There was an error processing the todo list:\n#{e.message} : #{stack_trace.first[1]}\n"
+    stack_trace.each{|x| print "#{x.inspect}\n"}
   	$errors = true
   end
 end
@@ -189,6 +194,7 @@ print "\n====================\nSTARTING BING MOBILE\n====================\n"
 print "Starting Browser\n"
 driver = Webdriver::UserAgent.driver(:agent => :iphone, :orientation => :landscape)
 b = Watir::Browser.new driver
+b.window.resize_to(800, 600)
 $mobile = true
 #b.goto 'bing.com/rewards/signin'
 #b.span(:text=>"Sign in with your Microsoft account").when_present.click
@@ -256,7 +262,7 @@ rescue Exception => e
 	print "Could not find Current Goal:\n#{e.message}\n"
 	$errors = true
 end
-  
+
 b.close
 
 print "\n"
