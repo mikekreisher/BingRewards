@@ -112,6 +112,10 @@ def todo_list(browser, searches_per_credit)
   	end
 
   	todo_ids.each do |id|
+      unless browser.link(id: id).exists?
+        print "- Could not click #{id}. Moving on...\n"
+        next
+      end
   		link_to_click = browser.link(:id=>id)
   		print "- #{link_to_click.element(:class=>"message").text}\n"
       if ((link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn" ||
@@ -202,9 +206,15 @@ b.goto 'login.live.com'
 #b.link(:id => "WLSignin").when_present.click
 
 login(b)
+
 b.goto 'http://www.bing.com/rewards/dashboard'
+if b.link(id: "WLSignin").exists?
+  b.link(id: "WLSignin").click
+  b.alert.when_present.ok if b.alert.exists?
+end
+
 todo_list(b, mobile_searches_per_credit)
-b.goto 'http://www.bing.com/rewards/dashboard'
+
 
 begin
 	print "\n======\nSTATUS\n======\n"
@@ -233,6 +243,10 @@ login(b)
 
 print "\n=========\nTODO LIST\n=========\n"
 b.goto 'http://www.bing.com/rewards/dashboard'
+if b.span(text: 'Join Now').exists?
+  todo_list(b, searches_per_credit)
+end
+
 todo_list(b, searches_per_credit)
 
 b.refresh
