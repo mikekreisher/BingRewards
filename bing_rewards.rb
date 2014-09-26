@@ -105,9 +105,9 @@ def todo_list(browser, searches_per_credit)
   		todo_list = offer_div.ul(:class=>'row')
   		todo_list.lis.each do |li|
   			not_completed = li.div(:class=>'open-check')
-  			#if not_completed.exists?
+  			if not_completed.exists?
   				todo_ids << li.link.id
-  			#end
+  			end
   		end
   	end
 
