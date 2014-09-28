@@ -132,7 +132,7 @@ def todo_list(browser, searches_per_credit)
 	  elsif (id == 'mobsrch01' || link_to_click.href =~ /.*\/explore\/rewards-mobile.*/) && $mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
-        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing searches.*/)
+        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing.*/)
         searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
         link_to_click.element(:class=>"message").click
         browser.windows.last.use
@@ -141,7 +141,7 @@ def todo_list(browser, searches_per_credit)
 	  elsif (id == 'srchdbl002' || link_to_click.href =~ /.*\/explore\/rewards-searchearn.*/) && !$mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
-        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing searches.*/)
+        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing.*/)
         searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
         link_to_click.click
         browser.windows.last.use
