@@ -112,6 +112,10 @@ def todo_list(browser, searches_per_credit)
   	end
 
   	todo_ids.each do |id|
+      unless browser.link(id: id).exists?
+        print "- Could not click #{id}. Moving on...\n"
+        next
+      end
   		link_to_click = browser.link(:id=>id)
   		print "- #{link_to_click.element(:class=>"message").text}\n"
       if ((link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn" ||
@@ -119,6 +123,8 @@ def todo_list(browser, searches_per_credit)
               link_to_click.href =~ /.*\/news\?q.*/) && !$mobile)
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
+        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing searches.*/)
+        searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
         link_to_click.click
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
@@ -126,6 +132,8 @@ def todo_list(browser, searches_per_credit)
 	  elsif (id == 'mobsrch01' || link_to_click.href =~ /.*\/explore\/rewards-mobile.*/) && $mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
+        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing searches.*/)
+        searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
         link_to_click.element(:class=>"message").click
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
@@ -133,6 +141,8 @@ def todo_list(browser, searches_per_credit)
 	  elsif (id == 'srchdbl002' || link_to_click.href =~ /.*\/explore\/rewards-searchearn.*/) && !$mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
+        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing searches.*/)
+        searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
         link_to_click.click
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
@@ -194,17 +204,20 @@ print "\n====================\nSTARTING BING MOBILE\n====================\n"
 print "Starting Browser\n"
 driver = Webdriver::UserAgent.driver(:agent => :iphone, :orientation => :landscape)
 b = Watir::Browser.new driver
-b.window.resize_to(800, 600)
+b.window.resize_to(800, 1000)
 $mobile = true
-#b.goto 'bing.com/rewards/signin'
-#b.span(:text=>"Sign in with your Microsoft account").when_present.click
 b.goto 'login.live.com'
-#b.link(:id => "WLSignin").when_present.click
 
 login(b)
+
 b.goto 'http://www.bing.com/rewards/dashboard'
+if b.link(id: "WLSignin").exists?
+  b.link(id: "WLSignin").click
+  b.alert.when_present.ok if b.alert.exists?
+end
+
 todo_list(b, mobile_searches_per_credit)
-b.goto 'http://www.bing.com/rewards/dashboard'
+
 
 begin
 	print "\n======\nSTATUS\n======\n"
@@ -233,14 +246,18 @@ login(b)
 
 print "\n=========\nTODO LIST\n=========\n"
 b.goto 'http://www.bing.com/rewards/dashboard'
+if b.span(text: 'Join Now').exists?
+  todo_list(b, searches_per_credit)
+end
+
 todo_list(b, searches_per_credit)
 
 b.refresh
 
 begin
 	print "\n======\nSTATUS\n======\n"
-	user_level =  b.div(:id => "user-status", :class => "side-tile").element(:class => "level-right").link(:class => "level-label")
-	print "#{user_level.text.capitalize} Level\n"
+	#user_level =  b.div(:id => "user-status", :class => "side-tile").element(:class => "level-right").link(:class => "level-label")
+	#print "#{user_level.text.capitalize} Level\n"
 	balance = b.div(:id => "user-status", :class => "side-tile").element(:class => "credits-left").div(:class => "credits")
 	print "#{balance.text} Credits Available\n"
 	lifetime = b.div(:id => "user-status", :class => "side-tile").element(:class => "credits-right").div(:class => "credits")
