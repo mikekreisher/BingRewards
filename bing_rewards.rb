@@ -246,6 +246,11 @@ login(b)
 
 print "\n=========\nTODO LIST\n=========\n"
 b.goto 'http://www.bing.com/rewards/dashboard'
+
+if b.link(href: /.*&provider=windows_live_id.*/).exists?
+  b.link(href: /.*&provider=windows_live_id.*/).click
+end
+
 if b.span(text: 'Join Now').exists?
   todo_list(b, searches_per_credit)
 end
