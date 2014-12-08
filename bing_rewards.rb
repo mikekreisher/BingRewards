@@ -189,6 +189,12 @@ def login(browser)
     sign_in_button.click
     browser.alert.when_present.ok if browser.alert.exists?
   end #while(login.exists? && pass.exists? && sign_in_button.exists?)
+  if(browser.url =~ /https:\/\/account\.live\.com\/ar\/cancel\?ru=https:.*/)
+    print "SECURITY CHECK\n"
+    browser.radio(id: 'idYesOption').set
+    browser.input(type: 'button', id: 'iLandingViewAction').when_present.click
+    browser.input(type: 'button', id: 'iOptionViewAction').when_present.click
+  end
   print "Logged in as #{$username}\n"
 end
 
