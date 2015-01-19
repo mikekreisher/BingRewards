@@ -217,6 +217,9 @@ b.goto 'login.live.com'
 login(b)
 
 b.goto 'http://www.bing.com/rewards/dashboard'
+if b.span(class: 'offerTitle').text == "Join Now"
+  b.goto 'https://www.bing.com/rewards/signin'
+end
 if b.link(id: "WLSignin").exists?
   b.link(id: "WLSignin").click
   b.alert.when_present.ok if b.alert.exists?
