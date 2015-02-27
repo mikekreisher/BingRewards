@@ -197,7 +197,7 @@ end
 
 print "\n====================\nSTARTING BING MOBILE\n====================\n"
 print "Starting Browser\n"
-driver = Webdriver::UserAgent.driver(:browser => $browser, :agent => :iphone, :orientation => :landscape)
+driver = Webdriver::UserAgent.driver(:browser => $browser, :agent => :android_phone, :orientation => :landscape)
 b = Watir::Browser.new driver
 b.window.resize_to(800, 1000)
 $mobile = true
