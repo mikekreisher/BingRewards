@@ -7,9 +7,9 @@ Bundler.require
 $username       = ""
 $password       = ""
 $approve_topics = false
-$errors 	    = false
+$errors 	      = false
 $mobile_errors  = false
-$browser_path   = ""
+$browser        = ""
 $mobile         = false
 search_count    = 30
 searches_per_credit = 3
@@ -21,18 +21,14 @@ if ARGV.count == 1 && File.exists?(ARGV[0])
     split_line = line.chomp.split('=')
     unless split_line[1].nil?
       case split_line[0]
-      when "[browser_path]"
-        $browser_path = split_line[1]
+      when "[browser]"
+        $browser = split_line[1].to_sym
       when "[username]"
         $username = split_line[1]
       when "[password]"
         $password = split_line[1]
       when "[approve_topics]"
         $approve_topics = split_line[1]
-      when "[search_count]"
-        search_count = split_line[1].to_i
-      when "[searches_per_credit]"
-        searches_per_credit = split_line[1].to_i
       end
     end
   end
@@ -199,16 +195,9 @@ def login(browser)
 end
 
 
-
-
-unless $browser_path == ""
-   Selenium::WebDriver::Firefox::Binary.path = $browser_path
-end
-
-
 print "\n====================\nSTARTING BING MOBILE\n====================\n"
 print "Starting Browser\n"
-driver = Webdriver::UserAgent.driver(:agent => :iphone, :orientation => :landscape)
+driver = Webdriver::UserAgent.driver(:browser => $browser, :agent => :iphone, :orientation => :landscape)
 b = Watir::Browser.new driver
 b.window.resize_to(800, 1000)
 $mobile = true
@@ -217,7 +206,7 @@ b.goto 'login.live.com'
 login(b)
 
 b.goto 'http://www.bing.com/rewards/dashboard'
-if b.span(class: 'offerTitle').text == "Join Now"
+if b.span(class: 'offerTitle').exists? && b.span(class: 'offerTitle').text == "Join Now"
   b.goto 'https://www.bing.com/rewards/signin'
 end
 if b.link(id: "WLSignin").exists?
@@ -246,7 +235,7 @@ b.close
 
 print "\n=====================\nSTARTING BING DESKTOP\n=====================\n"
 print "Starting Browser\n"
-b = Watir::Browser.new
+b = Watir::Browser.new $browser
 $mobile = false
 b.goto 'login.live.com'
 
