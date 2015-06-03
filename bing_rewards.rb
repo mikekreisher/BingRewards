@@ -77,11 +77,11 @@ def search(credits, searches_per_credit, browser)
       print "#{(i+1).to_s.rjust(2)}. Searching for #{topic}\n"
       browser.alert.when_present.ok if browser.alert.exists?
       browser.text_field(:id=>"sb_form_q").when_present.set(topic)
-      browser.form(:id=>"sb_form").submit
+      browser.form(:id=>"sb_form").when_present.submit
       sleep 5 # Wait 5 seconds
     end
     print "\n==================\nSEARCHES COMPLETED\n==================\n"
-  rescue Watir::Exception::UnknownFormException => e
+  rescue Watir::Exception => e
     print "\n*****\nERROR\n*****\n"
     print "There was an error performing the searches:\n#{e.message}\n"
     raise Watir::Exception::WatirException, "Could not find form"
@@ -97,15 +97,29 @@ end
 def todo_list(browser, searches_per_credit)
   begin
   	todo_ids = []
-  	browser.divs(:class=>'tileset').each do |offer_div|
-  		todo_list = offer_div.ul(:class=>'row')
-  		todo_list.lis.each do |li|
-  			not_completed = li.div(:class=>'open-check')
-  			if not_completed.exists?
-  				todo_ids << li.link.id
-  			end
-  		end
-  	end
+    progress = 0
+    max_credit = 0
+    if $mobile
+      sleep 5
+      mobile_search_progress = browser.div(id: "credit-progress").div(class: /(?=.*column)(?=.*right)/)
+      progress = mobile_search_progress.span(class: "primary").text
+      max_credit = mobile_search_progress.span(class: "secondary").text.match(/\d+/)[0]
+      browser.link(class: 'forward').when_present.click
+      item_cards = browser.links(class: 'item').select{|d| d.visible?}
+      item_cards.each do |item_card|
+        todo_ids << item_card.id
+      end
+    else
+      browser.divs(:class=>'tileset').each do |offer_div|
+        todo_list = offer_div.ul(:class=>'row')
+        todo_list.lis.each do |li|
+          not_completed = li.div(:class=>'open-check')
+          if not_completed.exists?
+            todo_ids << li.link.id
+          end
+        end
+      end
+    end
 
   	todo_ids.each do |id|
       unless browser.link(id: id).exists?
@@ -113,31 +127,30 @@ def todo_list(browser, searches_per_credit)
         next
       end
   		link_to_click = browser.link(:id=>id)
-  		print "- #{link_to_click.element(:class=>"message").text}\n"
+      link_info = $mobile ? "description" : "message"
+  		print "- #{link_to_click.element(:class=>link_info).text}\n"
       if ((link_to_click.href == "http://www.bing.com/search?q=weather&bnprt=searchandearn" ||
               link_to_click.href =~ /.*\/search\?q.*/ ||
               link_to_click.href =~ /.*\/news\?q.*/) && !$mobile)
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
-        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing searches.*/)
+        spc = link_to_click.element(:class=>link_info).text.match(/.*Earn 1 credit per (\d+) Bing searches.*/)
         searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
         link_to_click.click
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
         browser.windows.last.close if browser.windows.length > 1
 	  elsif (id == 'mobsrch01' || link_to_click.href =~ /.*\/explore\/rewards-mobile.*/) && $mobile
-        progress_tile = link_to_click.div(:class=>'progress')
-        progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
-        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing.*/)
+        spc = link_to_click.element(:class=>"description").text.match(/.*Earn 1 credit per (\d+) Bing.*/)
         searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
-        link_to_click.element(:class=>"message").click
+        link_to_click.element(:class=>"description").click
         browser.windows.last.use
-        search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
+        search(max_credit.to_i - progress.to_i, searches_per_credit, browser)
         browser.windows.last.close if browser.windows.length > 1
 	  elsif (id == 'srchdbl002' || link_to_click.href =~ /.*\/explore\/rewards-searchearn.*/) && !$mobile
         progress_tile = link_to_click.div(:class=>'progress')
         progress = progress_tile.text.match(/^(\d+) of (\d+) credits$/)
-        spc = link_to_click.element(:class=>"message").text.match(/.*Earn 1 credit per (\d+) Bing.*/)
+        spc = link_to_click.element(:class=>link_info).text.match(/.*Earn 1 credit per (\d+) Bing.*/)
         searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
         link_to_click.click
         browser.windows.last.use
@@ -206,6 +219,7 @@ b.goto 'login.live.com'
 login(b)
 
 b.goto 'http://www.bing.com/rewards/dashboard'
+sleep 5
 if b.span(class: 'offerTitle').exists? && b.span(class: 'offerTitle').text == "Join Now"
   b.goto 'https://www.bing.com/rewards/signin'
 end
@@ -214,12 +228,18 @@ if b.link(id: "WLSignin").exists?
   b.alert.when_present.ok if b.alert.exists?
 end
 
+if b.link(href: /.*rewards\/signin.*/).exists?
+  b.link(href: /.*rewards\/signin.*/).click
+  b.alert.when_present.ok if b.alert.exists?
+end
+
 todo_list(b, mobile_searches_per_credit)
 
 
 begin
 	print "\n======\nSTATUS\n======\n"
-	balance = b.span(:id => "id_rc")
+	#balance = b.span(:id => "id_rc")
+  balance = b.div(id: "splash_content").span(class: "count")
 	print "#{balance.text} Credits Available\n"
 rescue Exception => e
 	print "\n*****\nERROR\n*****\n"
