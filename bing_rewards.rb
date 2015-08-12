@@ -67,12 +67,12 @@ def search(credits, searches_per_credit, browser)
   end
 
   begin
-	start_link = browser.a(:href => '/search?q=weather&bnprt=searchandearn')
-	if start_link.exists?
-		start_link.click
-	else
-		browser.goto 'http://www.bing.com/search?q=weather&bnprt=searchandearn'
-	end
+#	start_link = browser.a(:href => '/search?q=weather&bnprt=searchandearn')
+#	if start_link.exists?
+#		start_link.click
+#	else
+#		browser.goto 'http://www.bing.com/search?q=weather&bnprt=searchandearn'
+#	end
     topics.each_with_index do |topic, i|
       print "#{(i+1).to_s.rjust(2)}. Searching for #{topic}\n"
       browser.alert.when_present.ok if browser.alert.exists?
@@ -179,7 +179,7 @@ end
 
 def login(browser)
   begin
-    login = browser.text_field :type => 'email', :name => 'login'
+    login = browser.text_field :type => 'email'#, :name => 'login'
     pass = browser.text_field :type => 'password', :name => 'passwd'
     sign_in_button = browser.input :type => 'submit'
 
