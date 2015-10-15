@@ -140,7 +140,7 @@ def todo_list(browser, searches_per_credit)
         browser.windows.last.use
         search(progress[2].to_i - progress[1].to_i, searches_per_credit, browser)
         browser.windows.last.close if browser.windows.length > 1
-	  elsif (id == 'mobsrch01' || link_to_click.href =~ /.*\/explore\/rewards-mobile.*/) && $mobile
+	  elsif (id == 'mobsrch01' || link_to_click.href =~ /.*\/explore\/rewards-mobile.*/ || id =~ /.*mobsrch.*/) && $mobile
         spc = link_to_click.element(:class=>"description").text.match(/.*Earn 1 credit per (\d+) Bing.*/)
         searches_per_credit = /\A[-+]?[0-9]+\z/ === spc[1] ? spc[1].to_i : searches_per_credit
         link_to_click.element(:class=>"description").click
